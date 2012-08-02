@@ -1,5 +1,4 @@
-require "rubui/version"
+$: << File.dirname(__FILE__)
 
-module Rubui
-  # Your code goes here...
-end
+require "rubui/base"
+require "rubui/version"
