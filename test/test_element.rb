@@ -43,7 +43,7 @@ class TestElement < Test::Unit::TestCase
   def test_primitive_element_with_many_children
     text_element1 = TextElement.new("test1")
     text_element2 = TextElement.new("test2")
-    primitive_element1 = PrimitiveElement.new("div", {"test" => "test"})
+    primitive_element1 = PrimitiveElement.new("div", "test" => "test")
     primitive_element2 = PrimitiveElement.new("div", {}, text_element1, primitive_element1)
     primitive_element3 = PrimitiveElement.new("div", {"a" => "b"}, primitive_element2, text_element2)
     assert(primitive_element3.validate)

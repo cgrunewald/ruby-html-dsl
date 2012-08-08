@@ -1,19 +1,46 @@
 module Rubui
-  class BaseElement
+  class AbstractElement
+    protected
     def validate
       false
     end
 
+    public
     def stringify
       nil
     end
   end
 
+  class BaseElement < AbstractElement
+    def initialize(name, attributes)
+      @name = name
+      @attributes = attributes || {}
+    end
+
+    attr_reader :name, :attributes
+    attr_accessor :children
+
+    def add_attribute key, value
+      @attributes[key] = value
+    end
+
+    def add_attributes attributes
+      attributes.each { |key, value| add_attribute key, value }
+    end
+
+    def remove_attribute attribute
+      @attributes.delete attribute
+    end
+
+    def remove_attributes attributes
+      attributes.each { |key| remove_attribute key }
+    end
+  end
+
   class PrimitiveElement < BaseElement
     def initialize(name, attributes = {}, *children)
+      super(name, attributes)
       @children = children || []
-      @name = name
-      @attributes = attributes
     end
 
     def validate
@@ -37,16 +64,33 @@ module Rubui
       else
         s << ">"
         @children.each do |child|
-          s << child.stringify
+          s << (child.is_a?(String) ? child : child.stringify)
         end
         s << "</#{@name}>"
       end
     end
 
-    attr_reader :name, :attributes, :children
+    attr_reader :name, :attributes
+    attr_accessor :children
   end
 
-  class TextElement < BaseElement
+  class FragElement < BaseElement
+    def initialize
+      super 'frag', nil
+    end
+
+    def validate
+      true
+    end
+
+    def stringify
+      str = ''
+      @children.each { |child| str << child.stringify }
+      str
+    end
+  end
+
+  class TextElement < AbstractElement
     def initialize(text)
       @text = text
     end
@@ -68,13 +112,18 @@ module Rubui
       @children = children || []
     end
     
-    attr_reader :children, :attributes
+    attr_reader :attributes
+    attr_accessor :children
 
     # metaclass for specification of attributes and children
     class << self
       def attributes(*args)
         @@attributes = args
       end
+    end
+
+    def validate
+      true
     end
 
     def render
@@ -87,6 +136,9 @@ module Rubui
       element = render
       if not element.is_a?(BaseElement)
         raise Exception.new("Rendered element is not a BaseElement")
+      end
+      if not element.validate
+        raise Exception.new("Rendered element is not valid")
       end
       element.stringify
     end
