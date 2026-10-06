@@ -53,6 +53,12 @@ module Rubui
       TextElement.new(yield)
     end
 
+    # Emits the block's string without HTML escaping. Only use for trusted
+    # markup.
+    def raw
+      RawElement.new(yield)
+    end
+
     def frag &block
       element = FragElement.new
       build element, &block

@@ -1,4 +1,18 @@
+require 'cgi'
+
 module Rubui
+  # Escapes &, <, >, " and ' so that arbitrary values can be safely embedded
+  # in HTML text content and double-quoted attribute values.
+  def self.escape_html(value)
+    CGI.escapeHTML(value.to_s)
+  end
+
+  # Stringifies a child node. Bare strings (e.g. returned from a builder
+  # block) are treated as text and escaped.
+  def self.stringify_child(child)
+    child.is_a?(String) ? escape_html(child) : child.stringify
+  end
+
   class AbstractElement
     protected
     def validate
@@ -55,7 +69,7 @@ module Rubui
       s = "<#{@name}"
       if not @attributes.nil?
         @attributes.each do |k,v|
-          s << " #{k}=\"#{v}\""
+          s << " #{k}=\"#{Rubui.escape_html(v)}\""
         end
       end
 
@@ -64,7 +78,7 @@ module Rubui
       else
         s << ">"
         @children.each do |child|
-          s << (child.is_a?(String) ? child : child.stringify)
+          s << Rubui.stringify_child(child)
         end
         s << "</#{@name}>"
       end
@@ -85,7 +99,7 @@ module Rubui
 
     def stringify
       str = ''
-      @children.each { |child| str << child.stringify }
+      @children.each { |child| str << Rubui.stringify_child(child) }
       str
     end
   end
@@ -100,9 +114,17 @@ module Rubui
     end
 
     def stringify
-      @text
+      Rubui.escape_html(@text)
     end
     attr_reader :text
+  end
+
+  # Text that is emitted verbatim, without HTML escaping. Only use this for
+  # trusted markup.
+  class RawElement < TextElement
+    def stringify
+      @text
+    end
   end
 
   class Element < BaseElement
