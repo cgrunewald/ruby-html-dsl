@@ -67,4 +67,43 @@ class TestBuilder < Test::Unit::TestCase
     assert_equal '<div><span>Hello</span>Hola</div>', element.stringify
   end
 
+  def test_multiple_text_nodes_accumulate
+    element = UI {
+      p {
+        text { 'a' }
+        raw { '<b>b</b>' }
+        text { 'c' }
+      }
+    }
+    assert_equal '<p>a<b>b</b>c</p>', element.stringify
+  end
+
+  def test_text_nodes_interleaved_with_elements
+    element = UI {
+      div {
+        text { 'before' }
+        span { 'mid' }
+        text { 'after' }
+      }
+    }
+    assert_equal '<div>before<span>mid</span>after</div>', element.stringify
+  end
+
+  def test_text_node_followed_by_bare_string
+    element = UI {
+      p {
+        text { 'a' }
+        'b'
+      }
+    }
+    assert_equal '<p>ab</p>', element.stringify
+  end
+
+  def test_multiple_top_level_text_nodes
+    element = UI {
+      text { 'x' }
+      text { 'y' }
+    }
+    assert_equal 'xy', element.stringify
+  end
 end
