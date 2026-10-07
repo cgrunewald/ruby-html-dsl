@@ -13,6 +13,33 @@ module Rubui
     child.is_a?(String) ? escape_html(child) : child.stringify
   end
 
+  # Renders an attribute hash as a string of HTML attributes (with a leading
+  # space before each one).
+  #
+  # * true renders a bare boolean attribute: { disabled: true } => " disabled"
+  # * false and nil omit the attribute entirely
+  # * a Hash value expands into prefixed attributes, e.g.
+  #   { data: { user_id: 1 } } => ' data-user-id="1"' (underscores in nested
+  #   keys become dashes)
+  def self.render_attributes(attributes, prefix = nil)
+    return '' if attributes.nil?
+    s = ''
+    attributes.each do |k, v|
+      name = prefix ? "#{prefix}-#{k.to_s.tr('_', '-')}" : k.to_s
+      case v
+      when nil, false
+        next
+      when true
+        s << " #{Rubui.escape_html(name)}"
+      when Hash
+        s << render_attributes(v, name)
+      else
+        s << " #{Rubui.escape_html(name)}=\"#{Rubui.escape_html(v)}\""
+      end
+    end
+    s
+  end
+
   class AbstractElement
     protected
     def validate
@@ -67,11 +94,7 @@ module Rubui
 
     def stringify
       s = "<#{@name}"
-      if not @attributes.nil?
-        @attributes.each do |k,v|
-          s << " #{k}=\"#{Rubui.escape_html(v)}\""
-        end
-      end
+      s << Rubui.render_attributes(@attributes)
 
       if @children.nil? || children.size == 0
         s << "/>"
