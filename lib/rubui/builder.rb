@@ -48,15 +48,23 @@ module Rubui
       build element, &block
     end
 
+    # Appends a node to the children of the element currently being built.
+    # Returns nil so the node isn't added a second time if it happens to be
+    # the block's return value.
+    def append node
+      @element_stack.last.push node
+      nil
+    end
+
     public
     def text
-      TextElement.new(yield)
+      append TextElement.new(yield)
     end
 
     # Emits the block's string without HTML escaping. Only use for trusted
     # markup.
     def raw
-      RawElement.new(yield)
+      append RawElement.new(yield)
     end
 
     def frag &block
