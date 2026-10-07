@@ -42,6 +42,17 @@ module Rubui
       end
     end
 
+    def self.create_void_element(name)
+      class_eval <<-STR
+        def #{name} attributes = {}, &block
+          if block
+            raise ArgumentError, "<#{name}> is a void element and cannot take a block"
+          end
+          build VoidElement.new('#{name}', attributes)
+        end
+      STR
+    end
+
     def element(name, attributes = {}, &block)
       # append element to the last array on the stack
       element = PrimitiveElement.new name, attributes
@@ -73,6 +84,13 @@ module Rubui
     create_element 'dd'
     create_element 'dl'
     create_element 'dt'
+
+    create_void_element 'br'
+    create_void_element 'hr'
+    create_void_element 'img'
+    create_void_element 'input'
+    create_void_element 'meta'
+    create_void_element 'link'
   end
 
   def UI &block

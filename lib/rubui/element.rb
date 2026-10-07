@@ -88,6 +88,27 @@ module Rubui
     attr_accessor :children
   end
 
+  # A void element (br, img, input, ...) can never have children and is
+  # always rendered self-closing, e.g. <br/> or <img src="a.png"/>.
+  class VoidElement < PrimitiveElement
+    TAGS = %w[area base br col embed hr img input link meta param source track wbr].freeze
+
+    def self.void?(name)
+      TAGS.include?(name.to_s)
+    end
+
+    def validate
+      super && (@children.nil? || @children.empty?)
+    end
+
+    def stringify
+      unless @children.nil? || @children.empty?
+        raise ArgumentError, "<#{@name}> is a void element and cannot have children"
+      end
+      super
+    end
+  end
+
   class FragElement < BaseElement
     def initialize
       super 'frag', nil
